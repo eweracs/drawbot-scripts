@@ -9,7 +9,7 @@ textsize=1000
 
 fps=60
 speed=60
-# fps/speed=duration of one loop in seconds
+# speed/fps=duration of one loop in seconds
 
 framewidth=1080
 frameheight=1920
