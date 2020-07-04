@@ -12,7 +12,7 @@ speed=60
 # speed/fps=duration of one loop in seconds
 
 framewidth=1080
-frameheight=1920
+frameheight=1080
 
 layers=5
 
