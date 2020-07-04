@@ -3,8 +3,8 @@ from drawBot import *
 
 # EDIT THESE VALUES #####################
 
-string="§"
-fontUwant="Fizz Text Pro Variable"
+string="string"
+fontUwant="Your Variable Font"
 textsize=1000
 
 fps=60
@@ -40,8 +40,8 @@ def draw(loopframe, astart):
     cmykFill(.1, 0, .2, 0)
     font(fontUwant)
     fontSize(textsize)
+    
     for l in range(layers):
-        frameshift = l * fps/layers
         a = QuinticEaseInOut(start=astart, end=axis1max-l*((axis1max-axis1min)/(layers-1)), duration=speed)
         args1 = {axis1 : a.ease(loopframe)}
         fontVariations(**args1)
@@ -67,4 +67,4 @@ for k in range(loops):
     pause(10, axis1min)
 
         
-saveImage("~/Desktop/" + string + "test 2 steps.mp4")
+saveImage("~/Desktop/" + string + " " + str(layers) + " layers.mp4")
