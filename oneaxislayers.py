@@ -55,7 +55,7 @@ def pause(length, currstart):
 # for the specified number of loops, cycle through the number of frames defined in speed and insert them into draw()
 for k in range(loops):
     
-    # second argument defines the start of the loop haöf, I'm sure there's a far more efficient way to write this
+    # second argument defines the start of the loop half, I'm sure there's a far more efficient way to write this
     for a1 in range(speed):
         draw(a1, axis1min)
     for a1 in reversed(range(speed)):
