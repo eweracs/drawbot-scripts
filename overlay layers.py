@@ -67,4 +67,4 @@ for k in range(loops):
     pause(10, axis1min)
 
         
-saveImage("~/Desktop/" + string + ".gif")
+saveImage("~/Desktop/" + string + ".mp4")
