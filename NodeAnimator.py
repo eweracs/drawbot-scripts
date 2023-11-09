@@ -22,6 +22,8 @@ class NodeAnimator:
 
 		self.fps = 30
 		self.duration = 2
+
+		self.easing_function = "linear"
 		# End defaults
 
 		class OnNode:
@@ -62,6 +64,45 @@ class NodeAnimator:
 			return
 
 		self.size_factor = self.font.upm / self.page_height * self.size
+
+	def select_easing_function(self, easing):
+		easing_functions_dict = {
+			"linear": LinearInOut,
+			"quad_ease_in": QuadEaseIn,
+			"quad_ease_out": QuadEaseOut,
+			"quad_ease_in_out": QuadEaseInOut,
+			"cubic_ease_in": CubicEaseIn,
+			"cubic_ease_out": CubicEaseOut,
+			"cubic_ease_in_out": CubicEaseInOut,
+			"quart_ease_in": QuarticEaseIn,
+			"quart_ease_out": QuarticEaseOut,
+			"quart_ease_in_out": QuarticEaseInOut,
+			"quint_ease_in": QuinticEaseIn,
+			"quint_ease_out": QuinticEaseOut,
+			"quint_ease_in_out": QuinticEaseInOut,
+			"sine_ease_in": SineEaseIn,
+			"sine_ease_out": SineEaseOut,
+			"sine_ease_in_out": SineEaseInOut,
+			"circ_ease_in": CircularEaseIn,
+			"circ_ease_out": CircularEaseOut,
+			"circ_ease_in_out": CircularEaseInOut,
+			"expo_ease_in": ExponentialEaseIn,
+			"expo_ease_out": ExponentialEaseOut,
+			"expo_ease_in_out": ExponentialEaseInOut,
+			"elastic_ease_in": ElasticEaseIn,
+			"elastic_ease_out": ElasticEaseOut,
+			"elastic_ease_in_out": ElasticEaseInOut,
+			"back_ease_in": BackEaseIn,
+			"back_ease_out": BackEaseOut,
+			"back_ease_in_out": BackEaseInOut,
+			"bounce_ease_in": BounceEaseIn,
+			"bounce_ease_out": BounceEaseOut,
+			"bounce_ease_in_out": BounceEaseInOut,
+		}
+
+		# Use get() to provide a default value if the easing is not found
+		easing_function = easing_functions_dict.get(easing, LinearInOut)
+		return easing_function
 
 	def get_axis_ranges(self):
 
@@ -153,7 +194,7 @@ class NodeAnimator:
 
 		# Set position, centred
 		offset_x = (self.page_width - layer.bounds.size.width) / 2
-		offset_y = (self.page_height - layer.bounds.size.height) / 2
+		offset_y = (self.page_height - (layer.ascender + layer.descender)) / 2
 		translate(offset_x, offset_y)
 		save()
 
@@ -182,8 +223,8 @@ class NodeAnimator:
 		fill(*self.background_colour)
 		rect(0, 0, self.page_width, self.page_height)
 
-	def return_layers_for_interpolations_for_glyphs(self, duration=None):
-		interpolated_layers = {glyph.name: [] for glyph in self.glyphs}
+	def return_layers_for_interpolations_for_glyph(self, glyph, duration=None):
+		interpolated_layers = []
 
 		# Set duration
 		if duration is None:
@@ -196,41 +237,53 @@ class NodeAnimator:
 
 		axis_ranges = self.get_axis_ranges()
 
-		for glyph in self.glyphs:
-			for step in range(steps):
-				for index, axis in enumerate(self.font.axes):
-					instance.internalAxesValues[axis.axisId] = CubicEaseInOut(
-						axis_ranges[index][0],
-						axis_ranges[index][1],
-						steps - 1
-					).ease(step)
-				proxy = instance.interpolatedFontProxy
-				glyph = proxy.glyphs[glyph.name]
-				proxy_layer = glyph.layers[0].copy()
-				proxy_layer.parent = glyph.layers[0].parent
-				interpolated_layers[glyph.name].append(proxy_layer)
+		for step in range(steps):
+			for index, axis in enumerate(self.font.axes):
+				instance.internalAxesValues[axis.axisId] = self.select_easing_function(self.easing_function)(
+					axis_ranges[index][0],
+					axis_ranges[index][1],
+					steps - 1
+				).ease(step)
+			proxy = instance.interpolatedFontProxy
+			glyph = proxy.glyphs[glyph.name]
+			proxy_layer = glyph.layers[0].copy()
+			proxy_layer.parent = glyph.layers[0].parent
+			interpolated_layers.append(proxy_layer)
 
 		return interpolated_layers
 
-	def animate_all_axes_for_glyphs(self, reverse=False):
-		layers_for_glyphs = self.return_layers_for_interpolations_for_glyphs()
+	def animate_all_axes_for_glyph(self, glyph, reverse=False):
+		layers_for_glyphs = self.return_layers_for_interpolations_for_glyph(glyph)
 		if reverse:
-			layers_for_glyphs = {glyph_name: list(reversed(layers_for_glyphs[glyph_name])) for glyph_name in
-								 layers_for_glyphs}
+			layers_for_glyphs.reverse()
+		for layer in layers_for_glyphs:
+			self.draw_page()
+			self.draw_layer(layer)
+
+	def build_animation(self, steps=None, format="mp4"):
+		if steps is None:
+			# Example steps. TODO: Make this a dictionary with the step name as key and arguments as values
+			steps = [
+				"animate_all_axes_for_glyphs",
+				"animate_all_axes_for_glyphs_reverse"
+			]
 		for glyph in self.glyphs:
-			for layer in layers_for_glyphs[glyph.name]:
-				self.draw_page()
-				self.draw_layer(layer)
-			saveImage("~/Desktop/%s.gif" % glyph.name)
+			newDrawing()
+			for step in steps:
+				if step == "animate_all_axes_for_glyphs":
+					self.animate_all_axes_for_glyph(glyph)
+				elif step == "animate_all_axes_for_glyphs_reverse":
+					self.animate_all_axes_for_glyph(glyph, reverse=True)
+			saveImage("~/Desktop/%s.%s" % (glyph.name, format))
 
 
 # Example usage
-animator = NodeAnimator(["a"])
+animator = NodeAnimator(["a", "s"])
+animator.easing_function = "quad_ease_in_out"
 animator.path.fill_colour = (0, 0, 0, 0)
 animator.off_node.line_colour = (0.2, 0.2, 0.2)
 animator.off_node.colour = (0.2, 0.2, 0.2)
 animator.on_node.shape = "rect"
 animator.on_node.smooth_shape = "oval"
 
-animator.animate_all_axes_for_glyphs()
-animator.animate_all_axes_for_glyphs(reverse=True)
+animator.build_animation()
